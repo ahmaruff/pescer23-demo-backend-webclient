@@ -27,12 +27,7 @@
             window.location.reload();
         },
         async getAllBooks(){
-            this.res = await fetch(this.api_url+'/books', {
-                method: 'GET',
-                headers : {
-                    'Content-Type' : 'application/json',
-                }
-            }).then(response => response.json());
+            this.res = await fetch(this.api_url+'/books').then(response => response.json());
             this.books = this.res.data.books;
         },
         async storeBook(data){
