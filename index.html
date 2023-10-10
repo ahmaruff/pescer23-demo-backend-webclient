@@ -19,12 +19,12 @@
 </head>
 <body
     x-data="{
-        api_url : $persist(0).using(sessionStorage),
+        api_url : $persist('http://127.0.0.1:8000/api').using(sessionStorage),
         res : {},
         books : [],
         setApiUrl(url){
             this.api_url = url;
-            this.getAllBooks()
+            window.location.reload();
         },
         async getAllBooks(){
             this.res = await fetch(this.api_url+'/books', {
@@ -69,13 +69,7 @@
             <a href="#" onclick="document.querySelector('#change-url').showModal()">CHANGE URL</a>
             <dialog id="change-url">
                 <button onclick="document.querySelector('#change-url').close()" slot="close" type="remove" aria-label="Closes"></button>
-                <div x-data="{
-                    new_api : '',
-                    changeApiUrl(url){
-                        setApiUrl(url);
-                        window.document.querySelector('#change-url').close();
-                    }
-                }">
+                <div x-data="{new_api: ''}" x-init="new_api = api_url">
                     <h1>Change API URL</h1>
                     <form @submit.prevent="setApiUrl(new_api)">
                         <fieldset>
