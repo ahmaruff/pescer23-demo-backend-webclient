@@ -63,10 +63,10 @@
     }">
     <m-container>
         <h1 class="txt-center">Simple Book CRUD</h1>
-        <p class="txt-center">For backend demonstration</p>
-        <p class="txt-center">
+        <h3 class="txt-center">For backend demonstration | Pesta Ceria Informatika 2023</h3>
+        <p class="txt-center pad-t-md">
             URL Backend API: <span x-text="api_url" class="fnt-bold"></span> | 
-            <a href="#" onclick="document.querySelector('#change-url').showModal()">Change URL</a>
+            <a href="#" onclick="document.querySelector('#change-url').showModal()">CHANGE URL</a>
             <dialog id="change-url">
                 <button onclick="document.querySelector('#change-url').close()" slot="close" type="remove" aria-label="Closes"></button>
                 <div x-data="{
@@ -86,7 +86,6 @@
                 </div>
             </dialog>
         </p>
-        <hr>
         <!-- CREATE MENU -->
         <p  class="txt-center">
             <button onclick="document.querySelector('#create-book').showModal()" ord="primary">Create new book</button>
@@ -214,5 +213,8 @@
             </div>
         </m-container>
     </m-container>
+    <footer class="txt-center pad-b-xl">
+        Copyright - Ahmad Ma'ruf 2023 | <a href="https://github.com/ahmaruff" target="_blank">Github</a>
+    </footer>
 </body>
 </html>
