@@ -3,32 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+ 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
    <!--  <link href="https://unpkg.com/m-@2.3.0/dist/m-icons.woff2" rel="preload" as="font" crossorigin> -->
     <link href="https://unpkg.com/m-@2.3.0/dist/m-min.css" rel="stylesheet">
     <script src="https://unpkg.com/m-@2.3.0/dist/m-min.js" defer></script>
     <title>PESCER BOOK CRUD API</title>
+    <style>
+        [x-cloak] {
+			display: none;
+		}
+    </style>
 </head>
 <body
     x-data="{
-        api_url : 'http://localhost:8000/api',
+        api_url : $persist(0).using(sessionStorage),
         res : {},
         books : [],
+        setApiUrl(url){
+            this.api_url = url;
+            this.getAllBooks()
+        },
         async getAllBooks(){
-            this.res = await fetch(this.api_url+'/books').then(response => response.json())
-            this.books = this.res.data.books
-            console.log(this.books);
+            this.res = await fetch(this.api_url+'/books', {
+                method: 'GET',
+                headers : {
+                    'Content-Type' : 'application/json',
+                }
+            }).then(response => response.json());
+            this.books = this.res.data.books;
+        },
+        async storeBook(data){
+            this.res = await fetch(this.api_url+'/books', {
+                method: 'POST',
+                headers : {
+                    'Content-Type' : 'application/json',
+                },
+                body : JSON.stringify(data)
+            }).then(response => response.json()).then(response => console.log(response)).catch(err => console.error(err));
+            window.document.querySelector('#create-book').close();
+            this.getAllBooks();
+        },
+        async updateBook(id, data){
+            this.res = await fetch(this.api_url+'/books/'+id, {
+                method: 'PUT',
+                headers : {
+                    'Content-Type' : 'application/json',
+                },
+                body : JSON.stringify(data)
+            }).then(response => response.json()).then(response => console.log(response)).catch(err => console.error(err));
+            this.getAllBooks();
         },
         async deleteBook(id){
-            this.res = await fetch(this.api_url+'/books/'+id, {method: 'DELETE'}).then(response => response.json())
-            console.log(this.res)
+            this.res = await fetch(this.api_url+'/books/'+id, {method: 'DELETE'}).then(response => response.json()).then(response => console.log(response)).catch(err => console.error(err));
             this.getAllBooks();
         }
     }">
     <m-container>
         <h1 class="txt-center">Simple Book CRUD</h1>
         <p class="txt-center">For backend demonstration</p>
+        <p class="txt-center">
+            URL Backend API: <span x-text="api_url" class="fnt-bold"></span> | 
+            <a href="#" onclick="document.querySelector('#change-url').showModal()">Change URL</a>
+            <dialog id="change-url">
+                <button onclick="document.querySelector('#change-url').close()" slot="close" type="remove" aria-label="Closes"></button>
+                <div x-data="{
+                    new_api : '',
+                    changeApiUrl(url){
+                        setApiUrl(url);
+                        window.document.querySelector('#change-url').close();
+                    }
+                }">
+                    <h1>Change API URL</h1>
+                    <form @submit.prevent="setApiUrl(new_api)">
+                        <fieldset>
+                            <input type="text" name="new_api" x-model.lazy="new_api">
+                        </fieldset>
+                        <button type="submit" ord="primary">Save</button>
+                    </form>
+                </div>
+            </dialog>
+        </p>
+        <hr>
         <!-- CREATE MENU -->
         <p  class="txt-center">
             <button onclick="document.querySelector('#create-book').showModal()" ord="primary">Create new book</button>
@@ -46,24 +104,10 @@
                             'author' : '',
                             'description' : '',
                             'category' : ''
-                        },
-                        res : {},
-                        async storeBook(){
-                            console.log(this.formData);
-                            this.res = await fetch(api_url+'/books', {
-                                method: 'POST',
-                                headers : {
-                                    'Content-Type' : 'application/json',
-                                    'Connection' : 'keep-alive',
-                                },
-                                body : JSON.stringify(this.formData)
-                            }).then(response => response.json()).then(response => console.log(response)).catch(err => console.error(err));
-                            window.document.querySelector('#create-book').close();
-                            getAllBooks();
                         }
                     }">
                     <div>
-                        <form @submit.prevent="storeBook()">
+                        <form @submit.prevent="storeBook(formData)">
                             <fieldset>
                                 <label>Title</label>
                                 <input type="title" name="title" required x-model="formData.title">
@@ -93,85 +137,78 @@
         <m-container>
             <div x-init="getAllBooks()">
                 <template x-for="book in books" :key="book.id">
-                    <m-box class="">
+                    <m-box class="mar-md shadow"
+                    x-data="{
+                        'showModal' : false,
+                        data_book : {
+                            title : book.title,
+                            author : book.author,
+                            category : book.category,
+                            description : book.description, 
+                        }
+                    }" @keydown.escape="showModal = false">
                         <div class="flex flx-row justify-content-between align-items-center gap-md">
-                            <h3 x-text="book.title"></h3>
+                            <h2 x-text="book.title"></h2>
                             <div>
-                                <button onclick="document.querySelector('#update-book').showModal()" ord="primary">Update</button>
+                                <button @click="showModal = !showModal" ord="primary">Update</button>
                                 <button ord="tertiary" @click="deleteBook(book.id)">Delete</button>
                             </div>
                         </div>
-                        <dialog id="update-book" style="width: 80vw">
-                            <button onclick="document.querySelector('#update-book').close()" slot="close" type="remove" aria-label="Closes"></button>
-                            
+                        <div x-show="showModal" x-cloak> 
                             <div>
-                                <h1>Update book</h1>
-                                <div
-                                    x-data="{
-                                        formData : {
-                                            'title' : book.title,
-                                            'author' : book.author,
-                                            'description' : book.description,
-                                            'category' : book.category
-                                        },
-                                        res : {},
-                                        async updateBook(id){
-                                            console.log(this.formData);
-                                            this.res = await fetch(api_url+'/books/'+id, {
-                                                method: 'PUT',
-                                                headers : {
-                                                    'Content-Type' : 'application/json',
-                                                    'Connection' : 'keep-alive',
-                                                },
-                                                body : JSON.stringify(this.formData)
-                                            }).then(response => response.json()).then(response => console.log(response)).catch(err => console.error(err));
-                                            window.document.querySelector('#update-book').close();
-                                            getAllBooks();
-                                        }
-                                    }">
-                                    <div>
-                                        <form @submit.prevent="updateBook(book.id)">
-                                            <fieldset>
-                                                <label>Title</label>
-                                                <input type="title" name="title" required x-model="formData.title">
-                                            </fieldset>
-                                            <fieldset>
-                                                <label>Author</label>
-                                                <input type="text" name="author" required x-model="formData.author">
-                                            </fieldset>
-                                            <fieldset>
-                                                <legend>Category</legend>
-                                                <input type="radio" name="fiction" value="fiction" id="fiction" x-model="formData.category">
-                                                <label for="fiction">Fiction</label>
-                                                <input type="radio" name="category" value="non-fiction" id="non-fiction" x-model="formData.category">
-                                                <label for="non-fiction">Non-Fiction</label>
-                                            </fieldset>
-                                            <fieldset>
-                                                <label>Description</label>
-                                                <input type="text" name="description" x-model="formData.description">
-                                            </fieldset>
-                                            <button type="submit" ord="primary">Save</button>
-                                        </form>
-                                    </div>
+                                <h4>Update book</h4>
+                                <div>
+                                    <form @submit.prevent="updateBook(book.id, data_book)">
+                                        <fieldset>
+                                            <label>Title</label>
+                                            <input type="title" name="title" x-model="data_book.title">
+                                        </fieldset>
+                                        <fieldset>
+                                            <label>Author</label>
+                                            <input type="text" name="author" x-model="data_book.author">
+                                        </fieldset>
+                                        <fieldset>
+                                            <legend>Category</legend>
+                                            <input type="radio" name="fiction" value="fiction" id="fiction" x-model="data_book.category">
+                                            <label for="fiction">Fiction</label>
+                                            <input type="radio" name="category" value="non-fiction" id="non-fiction" x-model="data_book.category">
+                                            <label for="non-fiction">Non-Fiction</label>
+                                        </fieldset>
+                                        <fieldset>
+                                            <label>Description</label>
+                                            <input type="text" name="description" x-model="data_book.description">
+                                        </fieldset>
+                                        <button type="submit" ord="primary" @click="showModal = !showModal">Save</button>
+                                    </form>
                                 </div>
                             </div>
-                        </dialog>
-                        <table striped="false">
-                            <tbody>
-                                <tr>
-                                    <th>Penulis</th>
-                                    <td><p x-text="book.author"></p></td>
-                                </tr>
-                                <tr>
-                                    <th>Kategori</th>
-                                    <td><p x-text="book.category"></p></td>
-                                </tr>
-                                <tr>
-                                    <th>Deskripsi</th>
-                                    <td><p x-text="book.description"></p></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        </div>
+                        <div>
+                            <m-row class="mar-t-sm mar-b-sm">
+                                <m-col span="2">
+                                    <span class="fnt-bold">Penulis</span>
+                                </m-col>
+                                <m-col>
+                                    <span x-text="book.author"></span>
+                                </m-col>
+                            </m-row>
+                            <m-row class="mar-t-sm mar-b-sm">
+                                <m-col span="2">
+                                    <span class="fnt-bold">Kategori</span>
+                                </m-col>
+                                <m-col>
+                                    <span x-text="book.category"></span>
+                                </m-col>
+                            </m-row>
+                            <m-row class="mar-t-sm mar-b-sm">
+                                <m-col span="2">
+                                    <span class="fnt-bold">Deskripsi</span>
+                                </m-col>
+                                <m-col>
+                                    <span x-text="book.description"></span>
+                                </m-col>
+                            </m-row>
+                        </div>
                     </m-box>
                 </template>
             </div>
