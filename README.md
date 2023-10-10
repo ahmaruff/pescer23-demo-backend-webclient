@@ -1,4 +1,4 @@
-# Books Web API CLINET
+# Books Web API CLIENT
 
 Sebuah client API sederhana CRUD buku.
 
